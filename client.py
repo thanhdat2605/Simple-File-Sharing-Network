@@ -1,6 +1,7 @@
 from socket import *
 from Message import Message, MessageType
 import os
+import threading
 
 
 IP = "localhost"
@@ -9,7 +10,11 @@ ADDR = (IP, PORT)
 SIZE = 1024
 
 clientSocket = socket(AF_INET, SOCK_STREAM)
-clientSocket.connect(ADDR)
+try:
+    clientSocket.connect(ADDR)
+except socket.error as e:
+    print(f"Could not connect to server: {e}")
+    exit()
 
 
 def fetch(fname):
@@ -35,13 +40,17 @@ def disconnect():
     clientSocket.close()
     exit()
 
-msg = input("Enter your name: ")
-clientSocket.sendall(Message(MessageType.INIT, msg).serialize_message().encode())
+def init(username):
+    clientSocket.sendall(Message(MessageType.INIT, username).serialize_message().encode())
+
 while True:
     command = input("> ")
     command = command.split()
+
     if command[0] == "disconnect" or command[0] == "d":
         disconnect()
+    elif command[0] == "init" or command[0] == "i":
+        init(command[1])
     elif command[0] == "publish" or command[0] == "p":
         publish(command[1], command[2])
     elif command[0] == "fetch" or command[0] == "f":
