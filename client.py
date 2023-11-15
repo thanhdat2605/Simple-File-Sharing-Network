@@ -15,7 +15,6 @@ clientSocket.connect(ADDR)
 def fetch(fname):
     pass
 
-
 def publish(lname, fname):
     if os.path.isdir(lname):
         if os.path.isfile(lname + "/" + fname):
@@ -29,14 +28,12 @@ def publish(lname, fname):
     else:
         print("directory is not exist")
 
-
 def disconnect():
     clientSocket.sendall(
         Message(MessageType.DISCONNECT, "goodbye").serialize_message().encode()
     )
     clientSocket.close()
     exit()
-
 
 msg = input("Enter your name: ")
 clientSocket.sendall(Message(MessageType.INIT, msg).serialize_message().encode())

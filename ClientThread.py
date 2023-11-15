@@ -1,9 +1,14 @@
 import threading
 from Message import Message, MessageType
 
+
 SIZE = 1024
 
-repositories = {}
+repositories = []
+
+
+def exist(repos):
+    pass
 
 
 class ClientThread(threading.Thread):
@@ -20,18 +25,29 @@ class ClientThread(threading.Thread):
             if message.type == MessageType.PUBLISH:
                 print(f"Client {self.username} published file {message.msg}")
                 fileparts = message.msg.split("\\")
-                if len(repositories[self.username]) != 0:
-                    repositories[self.username] = {}
-                repositories[self.username][fileparts[1]] = fileparts[0]
+                repositories.append(
+                    [
+                        self.username,
+                        fileparts[0],
+                        fileparts[1],
+                    ]
+                )
             elif message.type == MessageType.FETCH:
-                pass
+                print(f"Client {self.username} fetched file {message.msg}")
+                if exist(repositories):
+                    pass
+                else:
+                    self.csocket.sendall(
+                        Message(MessageType.NOTIFY, "file not found")
+                        .serialize_message()
+                        .encode()
+                    )
             elif message.type == MessageType.DISCONNECT:
                 print(f"Client {self.username} disconnected")
                 self.csocket.close()
                 break
             else:
                 print("Invalid")
-            print("from client", msg.upper())
             self.csocket.send(bytes(msg, "UTF-8"))
 
     def repos(self):

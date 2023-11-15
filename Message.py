@@ -9,6 +9,7 @@ class MessageType(str, Enum):
     PING = "PING"
     DISCONNECT = "DISCONNECT"
     INIT = "INIT"
+    NOTIFY = "NOTIFY"
 
 
 class Message:
