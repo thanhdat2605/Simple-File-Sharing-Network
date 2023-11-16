@@ -10,12 +10,21 @@ class MessageType(str, Enum):
     DISCONNECT = "DISCONNECT"
     INIT = "INIT"
     NOTIFY = "NOTIFY"
+    REQUESTFILE = "REQUESTFILE"
+    RESPONSEFILE = "RESPONSEFILE"
+
+
+class Status(str, Enum):
+    SUCCESS = "SUCCESS"
+    FAILURE = "FAILURE"
 
 
 class Message:
-    def __init__(self, type, msg):
+    def __init__(self, type, msg, status=Status.SUCCESS, adr=()):
         self.type = type
         self.msg = msg
+        self.status = status
+        self.adr = adr
 
     def serialize_message(self):
         return json.dumps(self.__dict__)
@@ -23,4 +32,4 @@ class Message:
     @staticmethod
     def deserialize_message(str):
         msg_dict = json.loads(str)
-        return Message(msg_dict["type"], msg_dict["msg"])
+        return Message(msg_dict["type"], msg_dict["msg"], msg_dict["status"],msg_dict["adr"])

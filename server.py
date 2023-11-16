@@ -1,20 +1,17 @@
 from socket import *
-from Message import Message, MessageType
+from Message import Message, MessageType, Status
+import random
 
 # from ClientThread import CThread
 import threading
 
-
-def exist(repos):
-    pass
-
-
 class CThread(threading.Thread):
-    def __init__(self, client_address, client_socket, username):
+    def __init__(self, client_address, client_socket, username, adr):
         threading.Thread.__init__(self)
         self.csocket = client_socket
         self.caddress = client_address
         self.username = username
+        self.adr = adr
 
     def run(self):
         msg = ""
@@ -32,11 +29,25 @@ class CThread(threading.Thread):
                 )
             elif message.type == MessageType.FETCH:
                 print(f"Client {self.username} fetched file {message.msg}")
-                if exist(repositories):
-                    pass
+                flag = False
+                for data in repositories:
+                    if data[2] == message.msg:
+                        flag = True
+                        break
+                if flag:
+                    self.csocket.sendall(
+                        Message(
+                            MessageType.NOTIFY,
+                            [data[1], data[2]],
+                            Status.SUCCESS,
+                            self.adr,
+                        )
+                        .serialize_message()
+                        .encode()
+                    )
                 else:
                     self.csocket.sendall(
-                        Message(MessageType.NOTIFY, "file not found")
+                        Message(MessageType.NOTIFY, data[2], Status.FAILURE)
                         .serialize_message()
                         .encode()
                     )
@@ -51,7 +62,6 @@ class CThread(threading.Thread):
                 print("Invalid")
             self.csocket.send(bytes(msg, "UTF-8"))
 
-
 PORT = 12000
 SIZE = 1024
 
@@ -60,11 +70,9 @@ stop = False
 threads = []
 repositories = []
 
-
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.bind(("localhost", PORT))
 print("The server is listening...")
-
 
 def discover(username):
     if isOnline(username):
@@ -75,20 +83,17 @@ def discover(username):
     else:
         print(f"Client {username} is offline")
 
-
 def ping(username):
     if isOnline(username):
         print(f"Client {username} is online")
     else:
         print(f"Client {username} is offline")
 
-
 def isOnline(username):
     for user in threads:
         if user.username == username:
             return True
     return False
-
 
 def handle_commands():
     while 1:
@@ -103,20 +108,16 @@ def handle_commands():
         else:
             print("Command not found")
 
-
 def listening():
     while 1:
+        serverSocket.listen(2)
         client_sock, client_address = serverSocket.accept()
-        print(stop)
         message = Message.deserialize_message(client_sock.recv(SIZE).decode())
         if message.type == MessageType.INIT:
             print(f"Client {message.msg} connected from {client_address}")
-
-        user_thread = CThread(client_address, client_sock, message.msg)
+        user_thread = CThread(client_address, client_sock, message.msg, message.adr)
         user_thread.start()
         threads.append(user_thread)
 
-
-serverSocket.listen(2)
 cmd_thread = threading.Thread(target=handle_commands).start()
 listen_thread = threading.Thread(target=listening()).start()
