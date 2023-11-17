@@ -11,17 +11,39 @@ ADDR = (IP, SERVER_PORT)
 SIZE = 1024
 FORMAT = "utf-8"
 
-clientSocket = socket(AF_INET, SOCK_STREAM)
 
-s2cSocket = socket(AF_INET, SOCK_STREAM)
-s2cSocket.bind(("", CLIENT_PORT))
-
-
-def fetch(fname):
+def fetch(fname, clientSocket):
     clientSocket.sendall(Message(MessageType.FETCH, fname).serialize_message().encode())
 
+    result = Message.deserialize_message(clientSocket.recv(SIZE).decode())
+    if result.type == MessageType.NOTIFY:
+        if result.status == "FAILURE":
+            print(f"{result.msg[1]} is not exist")
+        elif result.status == "SUCCESS":
+            reqSocket = socket(AF_INET, SOCK_STREAM)
 
-def publish(lname, fname):
+            print(f"fetching {result.msg}from {result.adr}")
+            try:
+                reqSocket.connect((result.adr[0], result.adr[1]))
+            except socket.error:
+                print(f"Could not connect to client at {result.adr}")
+                exit()
+            reqSocket.sendall(
+                Message(MessageType.REQUESTFILE, result.msg[0] + "/" + result.msg[1])
+                .serialize_message()
+                .encode()
+            )
+
+            res = Message.deserialize_message(reqSocket.recv(SIZE).decode(FORMAT))
+            if res.type == MessageType.RESPONSEFILE and res.status == Status.SUCCESS:
+                file = open(result.msg[1], "w")
+                file.write(res.msg)
+                file.close()
+            elif res.type == MessageType.RESPONSEFILE and res.status == Status.FAILURE:
+                print("read file unsuccessful")
+
+
+def publish(lname, fname, clientSocket):
     if os.path.isdir(lname):
         if os.path.isfile(lname + "/" + fname):
             clientSocket.sendall(
@@ -35,23 +57,21 @@ def publish(lname, fname):
         print("directory is not exist")
 
 
-def disconnect():
+def disconnect(clientSocket):
     clientSocket.sendall(
         Message(MessageType.DISCONNECT, "goodbye").serialize_message().encode()
     )
     clientSocket.close()
+    flag.status = True
     exit()
 
 
-def init(username):
+def init(username, clientSocket):
     try:
         clientSocket.connect(ADDR)
     except socket.error as e:
         print(f"Could not connect to server: {e}")
         exit()
-
-    threading.Thread(target=listening_from_server).start()
-    threading.Thread(target=listening_from_client).start()
 
     clientSocket.sendall(
         Message(MessageType.INIT, username, Status.SUCCESS, (IP, CLIENT_PORT))
@@ -59,23 +79,46 @@ def init(username):
         .encode()
     )
 
+    res = Message.deserialize_message(clientSocket.recv(SIZE).decode())
+    if res.status == Status.SUCCESS:
+        print("connected to server")
+        threading.Thread(target=listening_from_client).start()
+        flag.login = True
+    else:
+        print(res.msg)
+        clientSocket.close()
+
+
+class static:
+    def __init__(self, login=False, status=False):
+        self.login = login
+        self.status = status
+
+
+flag = static()
+
 
 def handle_commands():
     while 1:
         command = input("> ")
         command = command.split()
-
         if command[0] == "disconnect" or command[0] == "d":
-            disconnect()
+            disconnect(clientSocket)
         elif command[0] == "init" or command[0] == "i":
-            init(command[1])
+            if not flag.login:
+                clientSocket = socket(AF_INET, SOCK_STREAM)
+                init(command[1], clientSocket)
+            else:
+                print("you are already logged in")
         elif command[0] == "publish" or command[0] == "p":
-            publish(command[1], command[2])
+            publish(command[1], command[2], clientSocket)
         elif command[0] == "fetch" or command[0] == "f":
-            fetch(command[1])
+            fetch(command[1], clientSocket)
 
 
 def listening_from_client():
+    s2cSocket = socket(AF_INET, SOCK_STREAM)
+    s2cSocket.bind(("", CLIENT_PORT))
     while 1:
         s2cSocket.listen(2)
         cSocket, caddr = s2cSocket.accept()
@@ -98,44 +141,4 @@ def listening_from_client():
                 )
 
 
-def listening_from_server():
-    while 1:
-        result = Message.deserialize_message(clientSocket.recv(SIZE).decode())
-        if result.type == MessageType.NOTIFY:
-            if result.status == "FAILURE":
-                print(f"{result.msg[1]} is not exist")
-            elif result.status == "SUCCESS":
-                reqSocket = socket(AF_INET, SOCK_STREAM)
-
-                print(f"fetching {result.msg}from {result.adr}")
-                try:
-                    reqSocket.connect((result.adr[0], result.adr[1]))
-                except socket.error:
-                    print(f"Could not connect to client at {result.adr}")
-                    exit()
-                reqSocket.sendall(
-                    Message(
-                        MessageType.REQUESTFILE, result.msg[0] + "/" + result.msg[1]
-                    )
-                    .serialize_message()
-                    .encode()
-                )
-                
-                res = Message.deserialize_message(reqSocket.recv(SIZE).decode(FORMAT))
-                if (
-                    res.type == MessageType.RESPONSEFILE
-                    and res.status == Status.SUCCESS
-                ):
-                    file = open(result.msg[1], "w")
-                    file.write(res.msg)
-                    file.close()
-                elif (
-                    res.type == MessageType.RESPONSEFILE
-                    and res.status == Status.FAILURE
-                ):
-                    print("read file unsuccessful")
-
-
-
 threading.Thread(target=handle_commands).start()
-
