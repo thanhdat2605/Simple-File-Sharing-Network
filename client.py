@@ -27,7 +27,7 @@ def fetch(fname, clientSocket):
                 reqSocket.connect((result.adr[0], result.adr[1]))
             except socket.error:
                 print(f"Could not connect to client at {result.adr}")
-                exit()
+                exit(1)
             reqSocket.sendall(
                 Message(MessageType.REQUESTFILE, result.msg[0] + "/" + result.msg[1])
                 .serialize_message()
@@ -61,8 +61,19 @@ def disconnect(clientSocket):
     clientSocket.sendall(
         Message(MessageType.DISCONNECT, "goodbye").serialize_message().encode()
     )
-    clientSocket.close()
-    flag.status = True
+
+    res =Message.deserialize_message(clientSocket.recv(SIZE).decode())
+    if res.status == Status.SUCCESS:
+        print("disconnected from server")
+        flag.login = False    
+        clientSocket.close()
+        closeSocket = socket(AF_INET, SOCK_STREAM)
+        try:
+            closeSocket.connect((IP,CLIENT_PORT))
+        except socket.error as e:
+            print(f"Could not connect to server: {e}")
+        closeSocket.sendall(Message(MessageType.DISCONNECT, "goodbye").serialize_message().encode())
+        closeSocket.close()
     exit()
 
 
@@ -90,9 +101,8 @@ def init(username, clientSocket):
 
 
 class static:
-    def __init__(self, login=False, status=False):
+    def __init__(self, login=False):
         self.login = login
-        self.status = status
 
 
 flag = static()
@@ -117,28 +127,31 @@ def handle_commands():
 
 
 def listening_from_client():
-    s2cSocket = socket(AF_INET, SOCK_STREAM)
+    global s2cSocket 
+    s2cSocket= socket(AF_INET, SOCK_STREAM)
     s2cSocket.bind(("", CLIENT_PORT))
-    while 1:
-        s2cSocket.listen(2)
-        cSocket, caddr = s2cSocket.accept()
-        message = Message.deserialize_message(cSocket.recv(SIZE).decode())
-        if message.type == MessageType.REQUESTFILE:
-            if os.path.isfile(message.msg):
-                file = open(message.msg, "r")
-                msg = file.read()
-                file.close()
-                cSocket.sendall(
-                    Message(MessageType.RESPONSEFILE, msg, Status.SUCCESS)
-                    .serialize_message()
-                    .encode()
-                )
-            else:
-                cSocket.sendall(
-                    Message.serialize_message(
-                        MessageType.RESPONSEFILE, "", Status.FAILURE
-                    ).encode()
-                )
+    s2cSocket.listen(1)
+    cSocket, caddr = s2cSocket.accept()
+
+    message = Message.deserialize_message(cSocket.recv(SIZE).decode())
+    if message.type == MessageType.REQUESTFILE:
+        if os.path.isfile(message.msg):
+            file = open(message.msg, "r")
+            msg = file.read()
+            file.close()
+            cSocket.sendall(
+                Message(MessageType.RESPONSEFILE, msg, Status.SUCCESS)
+                .serialize_message()
+                .encode()
+            )
+        else:
+            cSocket.sendall(
+                Message.serialize_message(
+                    MessageType.RESPONSEFILE, "", Status.FAILURE
+                ).encode()
+            )
+    s2cSocket.close()
+    cSocket.close()
 
 
 threading.Thread(target=handle_commands).start()

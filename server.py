@@ -57,6 +57,11 @@ class CThread(threading.Thread):
                         )
                 elif message.type == MessageType.DISCONNECT:
                     print(f"Client {self.username} disconnected")
+                    self.csocket.sendall(
+                        Message(MessageType.DISCONNECT, "goodbye", Status.SUCCESS)
+                        .serialize_message()
+                        .encode()
+                    )
                     for uthread in threads:
                         if uthread.username == self.username:
                             threads.remove(uthread)
@@ -145,7 +150,11 @@ def listening():
                 )
                 continue
             print(f"Client {message.msg} connected from {client_address}")
-            client_sock.sendall(Message(MessageType.INIT, "", Status.SUCCESS).serialize_message().encode())
+            client_sock.sendall(
+                Message(MessageType.INIT, "", Status.SUCCESS)
+                .serialize_message()
+                .encode()
+            )
         user_thread = CThread(client_address, client_sock, message.msg, message.adr)
         user_thread.start()
         threads.append(user_thread)
