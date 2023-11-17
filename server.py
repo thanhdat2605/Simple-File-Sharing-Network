@@ -135,7 +135,6 @@ def listening():
         serverSocket.listen(2)
         client_sock, client_address = serverSocket.accept()
         message = Message.deserialize_message(client_sock.recv(SIZE).decode())
-        print(isOnline(message.msg))
         if message.type == MessageType.INIT:
             if isOnline(message.msg):
                 client_sock.sendall(
