@@ -17,15 +17,9 @@ s2cSocket = socket(AF_INET, SOCK_STREAM)
 s2cSocket.bind(("", CLIENT_PORT))
 
 
-try:
-    clientSocket.connect(ADDR)
-except socket.error as e:
-    print(f"Could not connect to server: {e}")
-    exit()
-
-
 def fetch(fname):
     clientSocket.sendall(Message(MessageType.FETCH, fname).serialize_message().encode())
+
 
 def publish(lname, fname):
     if os.path.isdir(lname):
@@ -40,6 +34,7 @@ def publish(lname, fname):
     else:
         print("directory is not exist")
 
+
 def disconnect():
     clientSocket.sendall(
         Message(MessageType.DISCONNECT, "goodbye").serialize_message().encode()
@@ -47,12 +42,23 @@ def disconnect():
     clientSocket.close()
     exit()
 
+
 def init(username):
+    try:
+        clientSocket.connect(ADDR)
+    except socket.error as e:
+        print(f"Could not connect to server: {e}")
+        exit()
+
+    threading.Thread(target=listening_from_server).start()
+    threading.Thread(target=listening_from_client).start()
+
     clientSocket.sendall(
         Message(MessageType.INIT, username, Status.SUCCESS, (IP, CLIENT_PORT))
         .serialize_message()
         .encode()
     )
+
 
 def handle_commands():
     while 1:
@@ -67,6 +73,7 @@ def handle_commands():
             publish(command[1], command[2])
         elif command[0] == "fetch" or command[0] == "f":
             fetch(command[1])
+
 
 def listening_from_client():
     while 1:
@@ -90,6 +97,7 @@ def listening_from_client():
                     ).encode()
                 )
 
+
 def listening_from_server():
     while 1:
         result = Message.deserialize_message(clientSocket.recv(SIZE).decode())
@@ -103,7 +111,7 @@ def listening_from_server():
                 try:
                     reqSocket.connect((result.adr[0], result.adr[1]))
                 except socket.error:
-                    print(f"Could not connect to client at {result.adr} because: {e}")
+                    print(f"Could not connect to client at {result.adr}")
                     exit()
                 reqSocket.sendall(
                     Message(
@@ -112,6 +120,7 @@ def listening_from_server():
                     .serialize_message()
                     .encode()
                 )
+                
                 res = Message.deserialize_message(reqSocket.recv(SIZE).decode(FORMAT))
                 if (
                     res.type == MessageType.RESPONSEFILE
@@ -126,6 +135,7 @@ def listening_from_server():
                 ):
                     print("read file unsuccessful")
 
-threading.Thread(target=listening_from_client).start()
+
+
 threading.Thread(target=handle_commands).start()
-threading.Thread(target=listening_from_server).start()
+

@@ -27,6 +27,8 @@ class CThread(threading.Thread):
                         fileparts[1],
                     ]
                 )
+            elif message.type == MessageType.INIT:
+                print(f"Client {message.msg} connected from {self.caddress}")
             elif message.type == MessageType.FETCH:
                 print(f"Client {self.username} fetched file {message.msg}")
                 flag = False
@@ -106,12 +108,13 @@ def handle_commands():
         elif command[0] == "stop" or command[0] == "s":
             pass
         else:
-            print("Command not found")
+            print("Command not found")  
 
 def listening():
     while 1:
+        print('here')
         serverSocket.listen(2)
-        client_sock, client_address = serverSocket.accept()
+        client_sock, client_address = serverSocket.accept() 
         message = Message.deserialize_message(client_sock.recv(SIZE).decode())
         if message.type == MessageType.INIT:
             print(f"Client {message.msg} connected from {client_address}")
@@ -119,5 +122,7 @@ def listening():
         user_thread.start()
         threads.append(user_thread)
 
-cmd_thread = threading.Thread(target=handle_commands).start()
-listen_thread = threading.Thread(target=listening()).start()
+threading.Thread(target=handle_commands).start()
+threading.Thread(target=listening).start()
+    
+
