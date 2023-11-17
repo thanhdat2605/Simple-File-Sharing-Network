@@ -113,6 +113,9 @@ def handle_commands():
         command = input("> ")
         command = command.split()
         if command[0] == "disconnect" or command[0] == "d":
+            if not flag.login:
+                print("you are not logged in")
+                continue
             disconnect(clientSocket)
         elif command[0] == "init" or command[0] == "i":
             if not flag.login:
@@ -121,8 +124,14 @@ def handle_commands():
             else:
                 print("you are already logged in")
         elif command[0] == "publish" or command[0] == "p":
+            if not flag.login:
+                print("you are not logged in")
+                continue
             publish(command[1], command[2], clientSocket)
         elif command[0] == "fetch" or command[0] == "f":
+            if not flag.login:
+                print("you are not logged in")
+                continue
             fetch(command[1], clientSocket)
 
 
