@@ -51,7 +51,7 @@ class CThread(threading.Thread):
                         )
                     else:
                         self.csocket.sendall(
-                            Message(MessageType.NOTIFY, data[2], Status.FAILURE)
+                            Message(MessageType.NOTIFY, "haha", Status.FAILURE)
                             .serialize_message()
                             .encode()
                         )

@@ -18,7 +18,7 @@ def fetch(fname, clientSocket):
     result = Message.deserialize_message(clientSocket.recv(SIZE).decode())
     if result.type == MessageType.NOTIFY:
         if result.status == "FAILURE":
-            print(f"{result.msg[1]} is not exist")
+            print(f"file is not exist")
         elif result.status == "SUCCESS":
             reqSocket = socket(AF_INET, SOCK_STREAM)
 
