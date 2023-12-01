@@ -36,3 +36,4 @@ Build a simple file-sharing application with application protocols defined by ea
 ## Technologies
 
 * Python: Version 3.11 or under
+* Shareable files: text, images
