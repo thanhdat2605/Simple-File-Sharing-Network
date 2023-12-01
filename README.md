@@ -31,6 +31,10 @@ Build a simple file-sharing application with application protocols defined by ea
 
 ![Alt hello](/screenshots/figure1.png)
 
+<p align="center">
+  <img src="/screenshots/figure1.png" alt="Illustration of file-sharing system activities."/>
+</p>
+
 ## Technologies
 
 * Python: Version 3.11 or under
