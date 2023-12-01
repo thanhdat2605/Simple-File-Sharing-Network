@@ -6,11 +6,11 @@ Build a simple file-sharing application with application protocols defined by ea
 
 ## APPLICATION DESCRIPTION
 
-### A centralized server keeps track of which clients are connected and storing what files.
+* A centralized server keeps track of which clients are connected and storing what files.
 
-• A client informs the server as to what files are contained in its local repository but does not actually transmit file data to the server.
+* A client informs the server as to what files are contained in its local repository but does not actually transmit file data to the server.
 
-• When a client requires a file that does not belong to its repository, a request is sent to the server. The server identifies some other clients who store the requested file and sends their identities to the requesting client. The client will select an appropriate source node and the file is then directly fetched by the requesting client from the node that has a copy of the file without requiring any server intervention.
+* When a client requires a file that does not belong to its repository, a request is sent to the server. The server identifies some other clients who store the requested file and sends their identities to the requesting client. The client will select an appropriate source node and the file is then directly fetched by the requesting client from the node that has a copy of the file without requiring any server intervention.
 
 • Multiple clients could be downloading different files from a target client at a given point in time. This requires the client code to be multithreaded.
 
