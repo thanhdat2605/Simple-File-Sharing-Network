@@ -30,7 +30,7 @@ Build a simple file-sharing application with application protocols defined by ea
   * __ping *hostname*__: live check the host named hostname
 
 <p align="center">
-  <img src="/screenshots/figure1.png" alt="Illustration of file-sharing system activities." width=20/>
+  <img src="/screenshots/figure1.png" alt="Illustration of file-sharing system activities." width=400/>
 </p>
 
 ## Technologies
