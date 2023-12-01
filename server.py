@@ -118,6 +118,16 @@ def isOnline(username):
     return False
 
 
+def list():
+    if threads:
+        print("Connected clients:")
+        print("------------------")
+        for client in threads:
+            print(f"Host: {client.username}, Peername: {client.caddress}")
+    else:
+        print("No clients are currently connected.")
+
+
 def handle_commands():
     while 1:
         command = input("> ")
@@ -126,6 +136,8 @@ def handle_commands():
             discover(command[1])
         elif command[0] == "ping" or command[0] == "p":
             ping(command[1])
+        elif command[0] == "list" or command[0] == "l":
+            list()
         # elif command[0] == "stop" or command[0] == "s":
         #     pass
         # else:
