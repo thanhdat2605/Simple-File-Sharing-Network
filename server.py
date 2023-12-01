@@ -21,12 +21,11 @@ class CThread(threading.Thread):
                 message = Message.deserialize_message(self.csocket.recv(SIZE).decode())
                 if message.type == MessageType.PUBLISH:
                     print(f"Client {self.username} published file {message.msg}")
-                    fileparts = message.msg.split("\\")
                     repositories.append(
                         [
                             self.username,
-                            fileparts[0],
-                            fileparts[1],
+                            message.msg[0],
+                            message.msg[1],
                         ]
                     )
                 elif message.type == MessageType.INIT:
@@ -92,7 +91,7 @@ repositories = []
 
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.bind(("localhost", PORT))
-print("The server is listening...")
+print("Waiting for connection...")
 
 
 def discover(username):
