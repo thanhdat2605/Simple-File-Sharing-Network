@@ -29,7 +29,7 @@ Build a simple file-sharing application with application protocols defined by ea
   * __discover *hostname*__: discover the list of local files of the host named hostname
   * __ping *hostname*__: live check the host named hostname
 
-![alt text](https://github.com/thanhdat2605/ComputerNetwork_Assignment1/tree/main/screenshots/figure1.png)
+![Alt text](https://github.com/thanhdat2605/ComputerNetwork_Assignment1/tree/main/screenshots/figure1.png)
 
 ## Technologies
 
