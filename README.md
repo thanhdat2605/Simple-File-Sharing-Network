@@ -29,10 +29,8 @@ Build a simple file-sharing application with application protocols defined by ea
   * __discover *hostname*__: discover the list of local files of the host named hostname
   * __ping *hostname*__: live check the host named hostname
 
-![Alt hello](/screenshots/figure1.png)
-
 <p align="center">
-  <img src="/screenshots/figure1.png" alt="Illustration of file-sharing system activities."/>
+  <img src="/screenshots/figure1.png" alt="Illustration of file-sharing system activities." width=20/>
 </p>
 
 ## Technologies
