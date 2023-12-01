@@ -15,7 +15,7 @@ Build a simple file-sharing application with application protocols defined by ea
 * Multiple clients could be downloading different files from a target client at a given point in time. This requires the client code to be multithreaded.
 
 * The client has a simple command-shell interpreter that is used to accept two kinds of commands.
-  * publish lname fname: a local file (which is stored in the client's file system at lname) is added to the client's repository as a file named fname and this information is conveyed to the server.
+ * publish lname fname: a local file (which is stored in the client's file system at lname) is added to the client's repository as a file named fname and this information is conveyed to the server.
 
 ** fetch fname: fetch some copy of the target file and add it to the local repository.
 
