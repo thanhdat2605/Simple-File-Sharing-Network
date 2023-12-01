@@ -36,7 +36,7 @@ class CThread(threading.Thread):
                     flag = False
                     for data in repositories:
                         if data[2] == message.msg:
-                            if isOnline(data[1]):
+                            if isOnline(self.username):
                                 flag = True
                             else:
                                 flag = False
