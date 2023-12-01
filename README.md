@@ -22,11 +22,11 @@ Build a simple file-sharing application with application protocols defined by ea
 * Multiple clients could be downloading different files from a target client at a given point in time. This requires the client code to be multithreaded.
 
 * The client has a simple command-shell interpreter that is used to accept two kinds of commands.
-  * __publish *lname* *fname*__: a local file (which is stored in the client's file system at lname) is added to the client's repository as a file named fname and this information is conveyed to the server.
+  * __publish *lname* *fname*__: a local file (which is stored in the client's file system at ___lname___) is added to the client's repository as a file named ___fname___ and this information is conveyed to the server.
   * __fetch *fname*__: fetch some copy of the target file and add it to the local repository.
 
 * The server has a simple command-shell interpreter
-  * __discover *hostname*__: discover the list of local files of the host named hostname
+  * __discover *hostname*__: discover the list of local files of the host named ___hostname___
   * __ping *hostname*__: live check the host named hostname
 
 <p align="center">
