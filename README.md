@@ -1,12 +1,12 @@
 ﻿# ComputerNetwork_Assignment1
  
-OBJECTIVES
+## General Info
 
 Build a simple file-sharing application with application protocols defined by each group, using the TCP/IP protocol stack.
 
-APPLICATION DESCRIPTION
+## APPLICATION DESCRIPTION
 
-• A centralized server keeps track of which clients are connected and storing what files.
+### A centralized server keeps track of which clients are connected and storing what files.
 
 • A client informs the server as to what files are contained in its local repository but does not actually transmit file data to the server.
 
