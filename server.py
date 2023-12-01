@@ -53,7 +53,9 @@ class CThread(threading.Thread):
                         )
                     else:
                         self.csocket.sendall(
-                            Message(MessageType.NOTIFY, "haha", Status.FAILURE)
+                            Message(
+                                MessageType.NOTIFY, "File not found", Status.FAILURE
+                            )
                             .serialize_message()
                             .encode()
                         )

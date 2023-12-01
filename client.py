@@ -11,7 +11,7 @@ IP = "localhost"
 SERVER_PORT = 12000
 CLIENT_PORT = random.randint(10000, 20000)
 ADDR = (IP, SERVER_PORT)
-SIZE = 1024576
+SIZE = 1024
 FORMAT = "utf-8"
 
 
@@ -45,44 +45,29 @@ def fetch(fname, clientSocket):
                 .serialize_message()
                 .encode()
             )
-            if fileType == "text/plain":
-                res = Message.deserialize_message(reqSocket.recv(SIZE).decode(FORMAT))
-                if (
-                    res.type == MessageType.RESPONSEFILE
-                    and res.status == Status.SUCCESS
-                ):
-                    # with (fname, "w") as file:
-                    #     file.write(res.msg)
-                    # file.close()
-                    file = open(fname, "w")
-                    file.write(res.msg)
-                    file.close()
-                    print(f"Fetching file {fname} SUCCESSFUL")
-                elif (
-                    res.type == MessageType.RESPONSEFILE
-                    and res.status == Status.FAILURE
-                ):
-                    print(f"Fetching file {fname} UNSUCCESSFUL")
-            elif fileType == "image/jpeg" or fileType == "image/png":
-                res = Message.json_to_message(reqSocket.recv(SIZE).decode())
-                if (
-                    res.type == MessageType.RESPONSEFILE
-                    and res.status == Status.SUCCESS
-                ):
-                    with open(fname, "wb") as image_file:
-                        # while True:
-                        #     res = reqSocket.recv(SIZE)
-                        #     if not res:
-                        #         break
-                        #     image_file.write(base64.b64decode(res))
+            res = Message.deserialize_message(reqSocket.recv(SIZE).decode())
 
-                        image_file.write(base64.b64decode(res.msg))
+            if res.type == MessageType.RESPONSEFILE and res.status == Status.SUCCESS:
+                if fileType == "text/plain":
+                    with open(fname, "w") as file:
+                        while True:
+                            chunk = reqSocket.recv(SIZE)
+                            if not chunk:  # no more data to receive
+                                break
+                            file.write(chunk.decode())
+                    print(f"Fetching file {fname} SUCCESSFUL")
+                    file.close()
+                elif fileType == "image/jpeg" or fileType == "image/png":
+                    with open(fname, "wb") as image_file:
+                        while True:
+                            chunk = reqSocket.recv(SIZE)
+                            if not chunk:  # no more data to receive
+                                break
+                            image_file.write(base64.b64decode(chunk))
                     print(f"Fetching image {fname} SUCCESSFUL")
-                elif (
-                    res.type == MessageType.RESPONSEFILE
-                    and res.status == Status.FAILURE
-                ):
-                    print(f"Fetching image {fname} UNSUCCESSFUL")
+                    image_file.close()
+            elif res.type == MessageType.RESPONSEFILE and res.status == Status.FAILURE:
+                print(f"Fetching image {fname} UNSUCCESSFUL")
 
             reqSocket.close()
 
@@ -193,21 +178,31 @@ def listening_from_client():
                     msg = file.read()
                     file.close()
                     cSocket.sendall(
-                        Message(MessageType.RESPONSEFILE, msg, Status.SUCCESS)
-                        .serialize_message()
-                        .encode()
-                    )
-                elif message.msg[2] == "image/jpeg" or message.msg[2] == "image/png":
-                    with open(fileDir, "rb") as image_file:
-                        encoded_string = base64.b64encode(image_file.read()).decode()
-                    # cSocket.sendall(encoded_string)
-                    cSocket.sendall(
                         Message(
-                            MessageType.RESPONSEFILE, encoded_string, Status.SUCCESS
+                            MessageType.RESPONSEFILE,
+                            "Starting to send file",
+                            Status.SUCCESS,
                         )
                         .serialize_message()
                         .encode()
                     )
+                    cSocket.sendall(msg.encode())
+                elif message.msg[2] == "image/jpeg" or message.msg[2] == "image/png":
+                    with open(fileDir, "rb") as image_file:
+                        encoded_string = base64.b64encode(image_file.read())
+                        # encoded_string = base64.b64encode(image_file.read()).decode() # Use when sending with Message
+                    image_file.close()  # recently added
+
+                    cSocket.sendall(
+                        Message(
+                            MessageType.RESPONSEFILE,
+                            "Starting to send file",
+                            Status.SUCCESS,
+                        )
+                        .serialize_message()
+                        .encode()
+                    )
+                    cSocket.sendall(encoded_string)
             else:
                 cSocket.sendall(
                     Message.serialize_message(
