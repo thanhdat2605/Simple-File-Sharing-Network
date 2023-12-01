@@ -36,7 +36,10 @@ class CThread(threading.Thread):
                     flag = False
                     for data in repositories:
                         if data[2] == message.msg:
-                            flag = True
+                            if isOnline(data[1]):
+                                flag = True
+                            else:
+                                flag = False
                             break
                     if flag:
                         self.csocket.sendall(
