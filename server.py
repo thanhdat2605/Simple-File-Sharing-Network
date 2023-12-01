@@ -126,10 +126,10 @@ def handle_commands():
             discover(command[1])
         elif command[0] == "ping" or command[0] == "p":
             ping(command[1])
-        elif command[0] == "stop" or command[0] == "s":
-            pass
-        else:
-            print("Command not found")
+        # elif command[0] == "stop" or command[0] == "s":
+        #     pass
+        # else:
+        #     print("Command not found")
 
 
 def listening():

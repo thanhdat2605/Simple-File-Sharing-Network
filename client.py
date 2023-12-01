@@ -20,7 +20,7 @@ def fetch(fname, clientSocket):
 
     result = Message.deserialize_message(clientSocket.recv(SIZE).decode())
     fileType = mimetypes.guess_type(result.msg[1])[0]
-    print(fileType)
+
     if result.type == MessageType.NOTIFY:
         if result.status == "FAILURE":
             print(f"Fetching file is not exist")
@@ -47,24 +47,42 @@ def fetch(fname, clientSocket):
             )
             if fileType == "text/plain":
                 res = Message.deserialize_message(reqSocket.recv(SIZE).decode(FORMAT))
+                if (
+                    res.type == MessageType.RESPONSEFILE
+                    and res.status == Status.SUCCESS
+                ):
+                    # with (fname, "w") as file:
+                    #     file.write(res.msg)
+                    # file.close()
+                    file = open(fname, "w")
+                    file.write(res.msg)
+                    file.close()
+                    print(f"Fetching file {fname} SUCCESSFUL")
+                elif (
+                    res.type == MessageType.RESPONSEFILE
+                    and res.status == Status.FAILURE
+                ):
+                    print(f"Fetching file {fname} UNSUCCESSFUL")
             elif fileType == "image/jpeg" or fileType == "image/png":
-                with open(fname, "wb") as image_file:
-                    while True:
-                        res = reqSocket.recv(SIZE)
-                        if not res:
-                            break
-                        image_file.write(base64.b64decode(res))
+                res = Message.json_to_message(reqSocket.recv(SIZE).decode())
+                if (
+                    res.type == MessageType.RESPONSEFILE
+                    and res.status == Status.SUCCESS
+                ):
+                    with open(fname, "wb") as image_file:
+                        # while True:
+                        #     res = reqSocket.recv(SIZE)
+                        #     if not res:
+                        #         break
+                        #     image_file.write(base64.b64decode(res))
 
-                    # res = Message.json_to_message(reqSocket.recv(SIZE))
-
-                    # image_file.write(base64.b64decode(res.msg))
-            # if res.type == MessageType.RESPONSEFILE and res.status == Status.SUCCESS:
-            #     if fileType == "text/plain":
-            #         file = open(fname, "w")
-            #         file.write(res.msg)
-            #         file.close()
-            # elif res.type == MessageType.RESPONSEFILE and res.status == Status.FAILURE:
-            #     print("Reading file unsuccessful")
+                        image_file.write(base64.b64decode(res.msg))
+                    print(f"Fetching image {fname} SUCCESSFUL")
+                elif (
+                    res.type == MessageType.RESPONSEFILE
+                    and res.status == Status.FAILURE
+                ):
+                    print(f"Fetching image {fname} UNSUCCESSFUL")
 
             reqSocket.close()
 
@@ -90,7 +108,7 @@ def disconnect(clientSocket):
 
     res = Message.deserialize_message(clientSocket.recv(SIZE).decode())
     if res.status == Status.SUCCESS:
-        print("disconnected from server")
+        print("Disconnected from server")
         flag.login = False
         clientSocket.close()
         closeSocket = socket(AF_INET, SOCK_STREAM)
@@ -120,7 +138,7 @@ def init(username, clientSocket):
 
     res = Message.deserialize_message(clientSocket.recv(SIZE).decode())
     if res.status == Status.SUCCESS:
-        print("connected to server")
+        print("Connected to server")
         threading.Thread(target=listening_from_client).start()
         flag.login = True
     else:
@@ -181,9 +199,15 @@ def listening_from_client():
                     )
                 elif message.msg[2] == "image/jpeg" or message.msg[2] == "image/png":
                     with open(fileDir, "rb") as image_file:
-                        encoded_string = base64.b64encode(image_file.read())
-                        # encoded_string = Message.image_to_json(fileDir)
-                    cSocket.sendall(encoded_string)
+                        encoded_string = base64.b64encode(image_file.read()).decode()
+                    # cSocket.sendall(encoded_string)
+                    cSocket.sendall(
+                        Message(
+                            MessageType.RESPONSEFILE, encoded_string, Status.SUCCESS
+                        )
+                        .serialize_message()
+                        .encode()
+                    )
             else:
                 cSocket.sendall(
                     Message.serialize_message(
@@ -191,21 +215,6 @@ def listening_from_client():
                     ).encode()
                 )
 
-            # if os.path.isfile(message.msg):
-            #     file = open(message.msg, "r")
-            #     msg = file.read()
-            #     file.close()
-            #     cSocket.sendall(
-            #         Message(MessageType.RESPONSEFILE, msg, Status.SUCCESS)
-            #         .serialize_message()
-            #         .encode()
-            #     )
-            # else:
-            #     cSocket.sendall(
-            #         Message.serialize_message(
-            #             MessageType.RESPONSEFILE, "", Status.FAILURE
-            #         ).encode()
-            #     )
         s2cSocket.close()
         cSocket.close()
 
