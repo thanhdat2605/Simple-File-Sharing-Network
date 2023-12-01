@@ -19,8 +19,6 @@ Build a simple file-sharing application with application protocols defined by ea
   * fetch fname: fetch some copy of the target file and add it to the local repository.
 
 * The server has a simple command-shell interpreter
-
-** discover hostname: discover the list of local files of the host named hostname
-
-** ping hostname: live check the host named hostname
+  * discover hostname: discover the list of local files of the host named hostname
+  * ping hostname: live check the host named hostname
 
