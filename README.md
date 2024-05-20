@@ -1,4 +1,4 @@
-﻿# ComputerNetwork_Assignment1
+﻿# Simple File Sharing Network
 
 
 ## Table of contents
